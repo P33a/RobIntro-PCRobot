@@ -1,23 +1,25 @@
 {
   "TApplication" : {
     "FMain" : {
-      "CBChartFreeze_Checked" : "0",
+      "CBChartFreeze_Checked" : "1",
       "CBRawDebug_Checked" : "0",
       "EditPWM1_Text" : "0",
       "EditPWM2_Text" : "0",
-      "EditRemoteIP_Text" : "192.168.1.124",
+      "EditRemoteIP_Text" : "192.168.1.128",
       "EditTon1_Text" : "0",
       "EditTon2_Text" : "0",
       "EditTtotal_Text" : "0",
       "EditZpole_Text" : "0.2",
       "FMain_Height" : "823",
-      "FMain_Left" : "563",
-      "FMain_Top" : "86",
-      "FMain_Width" : "572",
-      "EditLogName_Text" : "Log_",
+      "FMain_Left" : "320",
+      "FMain_Top" : "94",
+      "FMain_Width" : "548",
+      "EditLogName_Text" : "Log_lin3",
       "EditStateReq_Text" : "201",
-      "EditStateReqAlt_Text" : "1",
-      "CBComPort_Text" : "\\\\.\\COM3"
+      "EditStateReqAlt_Text" : "100",
+      "CBComPort_Text" : "\\\\.\\COM3",
+      "CBIRSeries_Checked" : "0",
+      "CBRobotPos_Checked" : "0"
     }
   }
 }

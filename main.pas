@@ -25,6 +25,7 @@ type
     vref, wref: single;
     v, w: single;
     x, y, theta: single;
+    xv, yv, thetav: single;
   end;
 
   TPID = record
@@ -52,10 +53,17 @@ type
     BUDPConnect: TButton;
     BUDPDisconnect: TButton;
     Button_ClearChart: TButton;
+    CBRobotPos: TCheckBox;
     CBRawDebug: TCheckBox;
     Chart: TChart;
     CBChartFreeze: TCheckBox;
     CBComPort: TComboBox;
+    CBIRSeries: TCheckBox;
+    LSIR5: TLineSeries;
+    LSIR4: TLineSeries;
+    LSIR3: TLineSeries;
+    LSIR2: TLineSeries;
+    LSIR1: TLineSeries;
     SerieSpeed1: TLineSeries;
     SerieSpeed2: TLineSeries;
     EditRobotX1: TEdit;
@@ -111,6 +119,7 @@ type
     procedure processFrame(channel: char; value: integer; source: integer);
     procedure SaveLog;
     procedure SeriesAddPoint(Series: TLineSeries; Y: double);
+    procedure SeriesClear;
     procedure SetComState(newState: boolean);
     { private declarations }
   public
@@ -225,6 +234,15 @@ begin
     Robot.T1 := (value shr 16) and $FFFF;
     Robot.T2 := value and $FFFF;
 
+  end else if channel = 'X' then begin // Vision Marker x position
+    Robot.xv := PSingle(@value)^;
+
+  end else if channel = 'Y' then begin // Vision Marker y position
+    Robot.yv := PSingle(@value)^;
+
+  end else if channel = 'Z' then begin // Vision Marker Theta angle
+    Robot.thetav := PSingle(@value)^;
+
   end else if channel = 'v' then begin // Robot linear speed
     Robot.v := PSingle(@value)^;
 
@@ -299,7 +317,22 @@ begin
 
 
     // Update chart
-    if not CBChartFreeze.Checked then SeriesAddPoint(SerieSpeed1, Robot.v);
+    if not CBChartFreeze.Checked then begin
+      SeriesAddPoint(SerieSpeed1, Robot.v);
+      SeriesAddPoint(SerieSpeed2, Robot.w);
+      if CBRobotPos.Checked then begin
+        SeriesAddPoint(LSRobotX, Robot.x);
+        SeriesAddPoint(LSRobotY, Robot.y);
+        SeriesAddPoint(LSRobotTheta, Robot.theta);
+      end;
+      if CBIRSeries.Checked then begin
+        SeriesAddPoint(LSIR1, Robot.IR[0] / 1024);
+        SeriesAddPoint(LSIR2, Robot.IR[1] / 1024);
+        SeriesAddPoint(LSIR3, Robot.IR[2] / 1024);
+        SeriesAddPoint(LSIR4, Robot.IR[3] / 1024);
+        SeriesAddPoint(LSIR5, Robot.IR[4] / 1024);
+      end;
+    end;
 
 
     //  SerieSpeed1.Add(Robot.enc1);
@@ -382,6 +415,7 @@ end;
 procedure TFMain.BSetStateAltClick(Sender: TObject);
 begin
   UDPMessageList += BuildMessage('s', StrToInt(EditStateReqAlt.Text));
+  SeriesClear();
 end;
 
 procedure TFMain.BSetStateClick(Sender: TObject);
@@ -465,12 +499,20 @@ end;
 
 procedure TFMain.Button_ClearChartClick(Sender: TObject);
 begin
-  SerieSpeed1.Clear;
+  SeriesClear();
 end;
 
 procedure TFMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   SGRobot.Cols[2].SaveToFile(ParsFileName);
+end;
+
+procedure TFMain.SeriesClear;
+var i: integer;
+begin
+  for i := 0 to Chart.Series.Count - 1 do begin
+    (Chart.Series[i] as TLineSeries).Clear;
+  end;
 end;
 
 procedure TFMain.FormDestroy(Sender: TObject);
@@ -520,7 +562,7 @@ begin
 
   FrameTime := GetTickCount64();
   LastFrameTime := FrameTime;
-  SeriesMaxPoints := 256;
+  SeriesMaxPoints := 1024;
 end;
 
 
@@ -550,10 +592,15 @@ begin
   try
     //SL.Add(format('%d %d %d ',[PWM1, PWM2, Ton1, Ton2]));
     for i := 0 to LSRobotX.Count - 1 do begin
-      SL.Add(format('%d %e %e %e',
+      SL.Add(format('%d %e %e %e %e %e %e %e %e',
                     [i, LSRobotX.YValue[i],
                      LSRobotY.YValue[i],
-                     LSRobotTheta.YValue[i]
+                     LSRobotTheta.YValue[i],
+                     LSIR1.YValue[i],
+                     LSIR2.YValue[i],
+                     LSIR3.YValue[i],
+                     LSIR4.YValue[i],
+                     LSIR5.YValue[i]
                     ]));
     end;
     //SL.SaveToFile(EditLogName.text + DateTimeToStr(now(), FormatSettings) + '.txt');
